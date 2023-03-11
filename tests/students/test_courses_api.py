@@ -34,11 +34,12 @@ def test_get_course(client, course_factory):
     """Test to get the first course."""
     course = course_factory()
 
-    response = client.get(URL)
+    course_url = URL + str(course.id) + '/'
+    response = client.get(course_url)
     data = response.json()
 
     assert response.status_code == 200
-    assert data[0]['name'] == course.name
+    assert data['name'] == course.name
 
 
 @pytest.mark.django_db
@@ -72,21 +73,36 @@ def test_id_name_filter(client, course_factory):
 
 
 @pytest.mark.django_db
-def test_crud_courses(client, course_factory):
-    """Test to create, read, update courses."""
+def test_create_courses(client, course_factory):
+    """Test to create courses."""
     response = client.post(URL, data={'name': 'django_course'})
     data = response.json()
+
     assert response.status_code == 201
     assert data['name'] == 'django_course'
 
+
+@pytest.mark.django_db
+def test_update_courses(client, course_factory):
+    """Test to update courses."""
     course = course_factory()
     course_url = URL + str(course.id) + '/'
+
     response = client.patch(course_url, data={'name': 'django_tests_course'})
     data = response.json()
+
     assert response.status_code == 200
     assert data['name'] == 'django_tests_course'
 
+
+@pytest.mark.django_db
+def test_delete_courses(client, course_factory):
+    """Test to delete courses."""
+    course = course_factory()
+    course_url = URL + str(course.id) + '/'
+
     response = client.delete(course_url)
     get_deleted_course = Course.objects.filter(name='django_tests_course').first()
+
     assert response.status_code == 204
     assert get_deleted_course == None
